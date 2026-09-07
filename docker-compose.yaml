@@ -1,0 +1,21 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: pokemon-frontend
+    ports:
+      - 5173:5173
+    depends_on:
+      - backend
+    environment:
+      - VITE_BACKEND_URL=${VITE_BACKEND_URL}
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: pokemon-backend
+    ports:
+      - 3000:3000
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
