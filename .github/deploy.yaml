@@ -1,0 +1,23 @@
+name: Deploy Application
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: cachy-os
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Deploy via SSH
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SHH_HOST }}
+        username: ${{ secrets.SHH_USERNAME }}
+        key: ${{ secrets.SSH_KEY }}
+        script: |
+          cd software/Multi-Cluster-Kubernetes-Platform
+          git pull
+          docker compose up -d --build
