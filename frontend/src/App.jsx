@@ -25,6 +25,11 @@ function App() {
           !error && <p className="text-white">No pokemon data available.</p>
         )}
       </div>
+      <div>
+        <h1 className="text-white text-3xl font-bold">
+          Multi Cluster Kubernetes Platform
+        </h1>
+      </div>
     </>
   );
 }
