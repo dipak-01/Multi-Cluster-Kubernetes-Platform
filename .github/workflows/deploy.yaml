@@ -1,11 +1,12 @@
 name: Deploy Application
+
 on:
   push:
     branches: [ main ]
 
 jobs:
   deploy:
-    runs-on: cachy-os
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout Code
@@ -14,10 +15,10 @@ jobs:
     - name: Deploy via SSH
       uses: appleboy/ssh-action@v1.0.3
       with:
-        host: ${{ secrets.SHH_HOST }}
-        username: ${{ secrets.SHH_USERNAME }}
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
         key: ${{ secrets.SSH_KEY }}
         script: |
-          cd software/Multi-Cluster-Kubernetes-Platform
-          git pull
+          cd ~/software/Multi-Cluster-Kubernetes-Platform
+          git pull origin main
           docker compose up -d --build
