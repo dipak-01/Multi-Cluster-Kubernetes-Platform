@@ -1,0 +1,81 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: platform-sre-alerts
+  namespace: observability
+  labels:
+    release: prometheus-stack
+    role: alert-rules
+spec:
+  groups:
+    - name: platform.application.rules
+      rules:
+        # Golden Signal: Error Rate
+        - alert: HighAPIErrorRate
+          expr: |
+            (sum(rate(http_requests_total{status=~"5.."}[5m])) or vector(0))
+            /
+            (sum(rate(http_requests_total[5m])) > 0 or vector(1)) > 0.05
+          for: 2m
+          labels:
+            severity: critical
+            team: platform-sre
+          annotations:
+            summary: "High API 5xx error rate detected on {{ $labels.instance }}"
+            description: "API 5xx error rate is currently {{ $value | humanizePercentage }} (threshold > 5%). Check application logs."
+            runbook_url: "file:///home/dipak/software/multistage_kubernetes_platform/runbooks/api-latency.md"
+
+        # Golden Signal: Latency
+        - alert: HighAPILatency
+          expr: |
+            histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) > 0.5
+          for: 3m
+          labels:
+            severity: warning
+            team: platform-sre
+          annotations:
+            summary: "API p95 latency is exceeding 500ms"
+            description: "p95 latency is {{ $value }}s over the last 5 minutes."
+
+        # Golden Signal: Saturation (Pod CPU saturation)
+        - alert: PodHighCPUUsage
+          expr: |
+            sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace="production"}) by (pod)
+            /
+            sum(kube_pod_container_resource_limits{namespace="production", resource="cpu"}) by (pod) > 0.85
+          for: 3m
+          labels:
+            severity: warning
+            team: platform-sre
+          annotations:
+            summary: "Pod {{ $labels.pod }} CPU usage exceeded 85% of limit"
+            description: "Pod is nearing CPU throttling threshold. Investigate via top/htop."
+            runbook_url: "file:///home/dipak/software/multistage_kubernetes_platform/runbooks/high-cpu.md"
+
+        # Golden Signal: Saturation (Pod Memory pressure)
+        - alert: PodHighMemoryUsage
+          expr: |
+            sum(container_memory_working_set_bytes{namespace="production"}) by (pod)
+            /
+            sum(kube_pod_container_resource_limits{namespace="production", resource="memory"}) by (pod) > 0.85
+          for: 3m
+          labels:
+            severity: critical
+            team: platform-sre
+          annotations:
+            summary: "Pod {{ $labels.pod }} Memory usage exceeded 85% of limit"
+            description: "Risk of OOMKill. Investigate memory leak."
+            runbook_url: "file:///home/dipak/software/multistage_kubernetes_platform/runbooks/high-memory.md"
+
+        # Pod Failure: CrashLoopBackOff
+        - alert: PodCrashLooping
+          expr: |
+            rate(kube_pod_container_status_restarts_total{namespace="production"}[5m]) * 60 > 2
+          for: 2m
+          labels:
+            severity: critical
+            team: platform-sre
+          annotations:
+            summary: "Pod {{ $labels.pod }} is restarting frequently (CrashLoop)"
+            description: "Container {{ $labels.container }} restarted more than twice in 5 minutes."
+            runbook_url: "file:///home/dipak/software/multistage_kubernetes_platform/runbooks/pod-crashloop.md"
