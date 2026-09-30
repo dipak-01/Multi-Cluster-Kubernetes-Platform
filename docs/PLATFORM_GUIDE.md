@@ -367,7 +367,7 @@ metadata:
 spec:
   project: platform
   source:
-    repoURL: https://github.com/dipak-01/Multi-Cluster-Kubernetes-Platform.git
+    repoURL: https://github.com/dipak-01/Resilix.git
     targetRevision: main
     path: helm/api
     helm:

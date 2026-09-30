@@ -10,14 +10,14 @@
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dipak-01/Multi-Cluster-Kubernetes-Platform.git"
+    "url": "git+https://github.com/dipak-01/Resilix.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/dipak-01/Multi-Cluster-Kubernetes-Platform/issues"
+    "url": "https://github.com/dipak-01/Resilix/issues"
   },
-  "homepage": "https://github.com/dipak-01/Multi-Cluster-Kubernetes-Platform#readme",
+  "homepage": "https://github.com/dipak-01/Resilix#readme",
   "dependencies": {
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
