@@ -14,6 +14,6 @@ jobs:
 
     - name: Pull latest changes and redeploy
       run: |
-        cd ~/software/Multi-Cluster-Kubernetes-Platform
+        cd ~/software/multistage_kubernetes_platform || cd ~/software/Multi-Cluster-Kubernetes-Platform
         git pull origin main
         docker compose up -d --build

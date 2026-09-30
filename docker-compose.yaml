@@ -1,8 +1,9 @@
 services:
   frontend:
     build:
-      context: ./frontend
+      context: ./applications/frontend
       dockerfile: Dockerfile
+      target: dev
     container_name: pokemon-frontend
     ports:
       - 5173:5173
@@ -12,7 +13,7 @@ services:
       - VITE_BACKEND_URL=${VITE_BACKEND_URL}
   backend:
     build:
-      context: ./backend
+      context: ./applications/api
       dockerfile: Dockerfile
     container_name: pokemon-backend
     ports:
