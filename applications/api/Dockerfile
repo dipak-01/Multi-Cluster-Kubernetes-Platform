@@ -10,8 +10,8 @@ COPY . .
 RUN chown -R node:node /app
 USER node
 
-ENV PORT=3000
-EXPOSE 3000
+ENV PORT=3005
+EXPOSE 3005
 
 # Run node directly so SIGTERM is handled without npm wrapper
 CMD ["node", "src/index.js"]

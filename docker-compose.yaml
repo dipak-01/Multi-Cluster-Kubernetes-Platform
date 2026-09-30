@@ -17,6 +17,6 @@ services:
       dockerfile: Dockerfile
     container_name: pokemon-backend
     ports:
-      - 3000:3000
+      - 3005:3000
     environment:
       - DATABASE_URL=${DATABASE_URL}
