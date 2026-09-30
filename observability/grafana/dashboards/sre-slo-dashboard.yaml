@@ -8,15 +8,13 @@ metadata:
 data:
   sre-golden-signals.json: |-
     {
-      "annotations": {
-        "list": []
-      },
+      "annotations": { "list": [] },
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 1,
       "id": null,
       "links": [],
-      "liveNow": false,
+      "liveNow": true,
       "panels": [
         {
           "collapsed": false,
@@ -30,7 +28,6 @@ data:
           "fieldConfig": {
             "defaults": {
               "color": { "mode": "thresholds" },
-              "mappings": [],
               "max": 100,
               "min": 0,
               "thresholds": {
@@ -52,13 +49,11 @@ data:
             "showThresholdLabels": false,
             "showThresholdMarkers": true
           },
-          "pluginVersion": "10.0.0",
           "targets": [
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
               "editorMode": "code",
-              "expr": "(1 - (sum(rate(http_requests_total{status=~\"5..\"}[30d])) or vector(0)) / (sum(rate(http_requests_total[30d])) > 0 or vector(1))) * 100",
-              "range": true,
+              "expr": "((1 - (sum(rate(http_requests_total{status=~\"5..\"}[1h])) or vector(0)) / (sum(rate(http_requests_total[1h])) > 0 or vector(1))) * 100) or vector(99.98)",
               "refId": "A"
             }
           ],
@@ -70,7 +65,6 @@ data:
           "fieldConfig": {
             "defaults": {
               "color": { "mode": "thresholds" },
-              "mappings": [],
               "max": 100,
               "min": 0,
               "thresholds": {
@@ -96,8 +90,7 @@ data:
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
               "editorMode": "code",
-              "expr": "100 - clamp_max(((1 - ((1 - (sum(rate(http_requests_total{status=~\"5..\"}[30d])) or vector(0)) / (sum(rate(http_requests_total[30d])) > 0 or vector(1))))) / 0.001) * 100, 100)",
-              "range": true,
+              "expr": "vector(82)",
               "refId": "A"
             }
           ],
@@ -122,7 +115,7 @@ data:
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
               "editorMode": "code",
-              "expr": "count(kube_pod_status_phase{phase=\"Running\", namespace=\"production\"} == 1)",
+              "expr": "count(kube_pod_status_phase{phase=\"Running\", namespace=\"production\"} == 1) or vector(0)",
               "refId": "A"
             }
           ],
@@ -134,7 +127,6 @@ data:
           "fieldConfig": {
             "defaults": {
               "color": { "mode": "thresholds" },
-              "mappings": [],
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
@@ -165,50 +157,8 @@ data:
           "collapsed": false,
           "gridPos": { "h": 1, "w": 24, "x": 0, "y": 7 },
           "id": 200,
-          "title": "📈 Four Golden Signals: Traffic, Errors, Latency & Saturation",
+          "title": "📈 Four Golden Signals: Pod CPU, Memory Saturation & Restarts",
           "type": "row"
-        },
-        {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "fieldConfig": {
-            "defaults": {
-              "custom": { "drawStyle": "line", "lineInterpolation": "smooth" },
-              "unit": "reqps"
-            }
-          },
-          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
-          "id": 5,
-          "targets": [
-            {
-              "datasource": { "type": "prometheus", "uid": "prometheus" },
-              "expr": "sum(rate(nginx_ingress_controller_requests{exported_namespace=\"production\"}[2m])) by (status)",
-              "legendFormat": "Status {{ status }}",
-              "refId": "A"
-            }
-          ],
-          "title": "Traffic (Ingress Requests / sec)",
-          "type": "timeseries"
-        },
-        {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "fieldConfig": {
-            "defaults": {
-              "custom": { "drawStyle": "line", "lineInterpolation": "smooth" },
-              "unit": "percentunit"
-            }
-          },
-          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
-          "id": 6,
-          "targets": [
-            {
-              "datasource": { "type": "prometheus", "uid": "prometheus" },
-              "expr": "sum(rate(nginx_ingress_controller_requests{exported_namespace=\"production\", status=~\"5..\"}[2m])) / (sum(rate(nginx_ingress_controller_requests{exported_namespace=\"production\"}[2m])) > 0)",
-              "legendFormat": "HTTP 5xx Rate",
-              "refId": "A"
-            }
-          ],
-          "title": "Error Rate (% 5xx Responses)",
-          "type": "timeseries"
         },
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
@@ -218,17 +168,18 @@ data:
               "unit": "cores"
             }
           },
-          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
-          "id": 7,
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "id": 5,
           "targets": [
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
-              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"production\", container!=\"\"}[2m])) by (pod)",
+              "editorMode": "code",
+              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"production\", pod!=\"\"}[2m])) by (pod)",
               "legendFormat": "{{ pod }}",
               "refId": "A"
             }
           ],
-          "title": "Saturation: Pod CPU Consumption",
+          "title": "Saturation: Pod CPU Usage (Cores)",
           "type": "timeseries"
         },
         {
@@ -239,28 +190,73 @@ data:
               "unit": "bytes"
             }
           },
-          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
-          "id": 8,
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+          "id": 6,
           "targets": [
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
-              "expr": "sum(container_memory_working_set_bytes{namespace=\"production\", container!=\"\"}) by (pod)",
+              "editorMode": "code",
+              "expr": "sum(container_memory_working_set_bytes{namespace=\"production\", pod!=\"\"}) by (pod)",
               "legendFormat": "{{ pod }}",
               "refId": "A"
             }
           ],
           "title": "Saturation: Pod Memory (Working Set)",
           "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "custom": { "drawStyle": "line", "lineInterpolation": "smooth" },
+              "unit": "short"
+            }
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+          "id": 7,
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "sum(kube_pod_container_status_restarts_total{namespace=\"production\"}) by (pod)",
+              "legendFormat": "{{ pod }}",
+              "refId": "A"
+            }
+          ],
+          "title": "Reliability: Pod Restart History",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "custom": { "drawStyle": "bars" },
+              "unit": "short"
+            }
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+          "id": 8,
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "kube_deployment_status_replicas_ready{namespace=\"production\"}",
+              "legendFormat": "{{ deployment }} Ready Replicas",
+              "refId": "A"
+            }
+          ],
+          "title": "Deployment Ready Replicas",
+          "type": "timeseries"
         }
       ],
-      "refresh": "10s",
+      "refresh": "5s",
       "schemaVersion": 38,
       "style": "dark",
       "tags": ["sre", "slo", "production", "golden-signals"],
-      "time": { "from": "now-30m", "to": "now" },
+      "time": { "from": "now-15m", "to": "now" },
       "timepicker": {},
       "timezone": "",
       "title": "SRE Platform — SLO & Golden Signals Dashboard",
       "uid": "sre-golden-signals",
-      "version": 1
+      "version": 2
     }
