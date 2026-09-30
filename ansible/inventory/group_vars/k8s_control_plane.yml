@@ -1,0 +1,14 @@
+---
+# Control Plane Specific Configuration
+is_control_plane: true
+apiserver_port: 6443
+control_plane_endpoint: "192.168.49.2:6443"
+
+# Kubernetes Control Plane Ports to allow
+control_plane_firewall_ports:
+  - 6443   # Kubernetes API Server
+  - 2379   # etcd client requests
+  - 2380   # etcd peer communication
+  - 10250  # Kubelet API
+  - 10259  # kube-scheduler
+  - 10257  # kube-controller-manager

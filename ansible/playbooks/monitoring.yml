@@ -1,0 +1,7 @@
+---
+# Playbook: Deploy Prometheus Node Exporter
+- name: Deploy Prometheus Node Exporter
+  hosts: monitoring
+  become: yes
+  roles:
+    - node-exporter

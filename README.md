@@ -70,11 +70,11 @@ helm template frontend helm/frontend -f helm/frontend/values-production.yaml
 - [x] **Phase 0**: Project Scaffolding, Workload Packaging & Helm Charts
 - [x] **Milestone 1**: Linux Performance Runbook & Systems Engineering ([Runbook](runbooks/linux-troubleshooting.md))
 - [ ] **Milestone 2**: Terraform AWS Infrastructure Modules (`network`, `compute`, `security`)
-- [ ] **Milestone 3**: Ansible Automation & Hardening (containerd, sysctl, node-exporter)
-- [ ] **Milestone 4**: Kubernetes Cluster Provisioning & Network Policies
-- [ ] **Milestone 5**: ArgoCD GitOps Deployment & Reconciliations
-- [ ] **Milestone 6**: Observability Stack (Prometheus, Grafana, Alertmanager, Loki)
-- [ ] **Milestone 7**: SRE SLOs, Error Budgets & Alert Rules
-- [ ] **Milestone 8**: Chaos Engineering Suite
-- [ ] **Milestone 9**: `platformctl` Operational CLI
+- [x] **Milestone 3**: Ansible Automation & Hardening ([Guide](docs/ANSIBLE_GUIDE.md))
+- [x] **Milestone 4**: Kubernetes Cluster Provisioning & Zero-Trust Network Policies
+- [x] **Milestone 5**: ArgoCD GitOps Deployment & Reconciliations
+- [x] **Milestone 6**: Observability Stack (Prometheus, Grafana, Alertmanager)
+- [x] **Milestone 7**: SRE SLOs, Error Budgets & Alert Rules ([docs/SLO.md](docs/SLO.md))
+- [x] **Milestone 8**: Chaos Engineering Suite ([Experiments](chaos/CHAOS_EXPERIMENTS.md))
+- [x] **Milestone 9**: `platformctl` Operational CLI in Go
 - [ ] **Milestone 10**: Full Production Incident Simulation

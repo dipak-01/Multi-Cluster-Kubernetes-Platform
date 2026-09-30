@@ -1,0 +1,7 @@
+---
+# Playbook: Bootstrap OS baseline, packages, swapoff, and kernel modules
+- name: Bootstrap Linux Nodes
+  hosts: k8s_cluster
+  become: yes
+  roles:
+    - linux

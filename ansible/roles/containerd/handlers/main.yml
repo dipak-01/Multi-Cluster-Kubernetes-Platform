@@ -1,0 +1,7 @@
+---
+# Handlers for containerd role
+
+- name: restart containerd
+  ansible.builtin.service:
+    name: containerd
+    state: restarted

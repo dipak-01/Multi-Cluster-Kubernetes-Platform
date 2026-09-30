@@ -1,0 +1,31 @@
+[Unit]
+Description=Prometheus Node Exporter
+Documentation=https://github.com/prometheus/node_exporter
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User={{ node_exporter_user }}
+Group={{ node_exporter_group }}
+Type=simple
+ExecStart=/usr/local/bin/node_exporter \
+  --web.listen-address=0.0.0.0:{{ node_exporter_port }} \
+  --collector.systemd \
+  --collector.processes \
+  --collector.textfile.directory=/var/lib/node_exporter/textfile_collector
+
+Restart=always
+RestartSec=5s
+
+# Security Hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+CapabilityBoundingSet=
+
+[Install]
+WantedBy=multi-user.target

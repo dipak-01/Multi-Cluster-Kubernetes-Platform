@@ -1,0 +1,7 @@
+---
+# Handlers for kubernetes role
+
+- name: restart kubelet
+  ansible.builtin.service:
+    name: kubelet
+    state: restarted

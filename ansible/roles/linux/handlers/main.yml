@@ -1,0 +1,6 @@
+---
+# Handlers for linux role
+
+- name: reload sysctl
+  ansible.builtin.command: sysctl --system
+  changed_when: true

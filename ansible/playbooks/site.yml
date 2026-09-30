@@ -1,0 +1,18 @@
+---
+# Master Site Playbook: Full End-to-End Cluster Node Provisioning
+# Orchestrates bootstrap, hardening, containerd, kubernetes, and node-exporter in order
+
+- name: Master Provisioning - Kubernetes Cluster Baseline & Hardening
+  hosts: k8s_cluster
+  become: yes
+  roles:
+    - linux
+    - hardening
+    - containerd
+    - kubernetes
+
+- name: Master Provisioning - Observability & Monitoring
+  hosts: monitoring
+  become: yes
+  roles:
+    - node-exporter

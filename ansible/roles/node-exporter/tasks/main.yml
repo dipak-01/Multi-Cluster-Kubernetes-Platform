@@ -1,0 +1,71 @@
+---
+# Prometheus Node Exporter Installation and Daemon Setup
+
+- name: Create dedicated system group for node_exporter
+  ansible.builtin.group:
+    name: "{{ node_exporter_group }}"
+    system: yes
+    state: present
+
+- name: Create dedicated system user for node_exporter
+  ansible.builtin.user:
+    name: "{{ node_exporter_user }}"
+    group: "{{ node_exporter_group }}"
+    system: yes
+    shell: /sbin/nologin
+    home: /var/lib/node_exporter
+    create_home: yes
+    state: present
+
+- name: Create textfile collector directory
+  ansible.builtin.file:
+    path: /var/lib/node_exporter/textfile_collector
+    state: directory
+    owner: "{{ node_exporter_user }}"
+    group: "{{ node_exporter_group }}"
+    mode: '0755'
+
+- name: Set architecture variable for node_exporter download
+  ansible.builtin.set_fact:
+    node_exporter_arch: "{{ 'amd64' if ansible_architecture == 'x86_64' else 'arm64' }}"
+
+- name: Download official Prometheus node_exporter binary archive
+  ansible.builtin.get_url:
+    url: "https://github.com/prometheus/node_exporter/releases/download/v{{ node_exporter_version }}/node_exporter-{{ node_exporter_version }}.linux-{{ node_exporter_arch }}.tar.gz"
+    dest: "/tmp/node_exporter-{{ node_exporter_version }}.tar.gz"
+    mode: '0644'
+
+- name: Extract node_exporter binary to /usr/local/bin
+  ansible.builtin.unarchive:
+    src: "/tmp/node_exporter-{{ node_exporter_version }}.tar.gz"
+    dest: /usr/local/bin
+    remote_src: yes
+    extra_opts:
+      - "--strip-components=1"
+      - "node_exporter-{{ node_exporter_version }}.linux-{{ node_exporter_arch }}/node_exporter"
+    owner: root
+    group: root
+    mode: '0755'
+  notify: restart node_exporter
+
+- name: Deploy hardened systemd unit file for node_exporter
+  ansible.builtin.template:
+    src: node_exporter.service.j2
+    dest: /etc/systemd/system/node_exporter.service
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - reload systemd
+    - restart node_exporter
+
+- name: Ensure node_exporter service is enabled and started
+  ansible.builtin.service:
+    name: node_exporter
+    state: started
+    enabled: yes
+
+- name: Clean up temporary download archive
+  ansible.builtin.file:
+    path: "/tmp/node_exporter-{{ node_exporter_version }}.tar.gz"
+    state: absent

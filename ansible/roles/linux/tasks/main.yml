@@ -1,0 +1,63 @@
+---
+# Baseline Linux Configuration & Kernel Tuning
+
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: yes
+    cache_valid_time: 3600
+  when: ansible_os_family == "Debian"
+
+- name: Install baseline system packages and networking utilities
+  ansible.builtin.package:
+    name:
+      - curl
+      - apt-transport-https
+      - ca-certificates
+      - gnupg
+      - lsb-release
+      - socat
+      - conntrack
+      - ipset
+      - iptables
+      - htop
+      - sysstat
+      - jq
+    state: present
+
+- name: Disable active swap immediately
+  ansible.builtin.command: swapoff -a
+  when: ansible_swaptotal_mb is defined and ansible_swaptotal_mb > 0
+  changed_when: true
+
+- name: Remove swap entry from /etc/fstab to persist across reboots
+  ansible.builtin.replace:
+    path: /etc/fstab
+    regexp: '^(\s*[^#\s]+\s+[^#\s]+\s+swap\s+.*)$'
+    replace: '# \1'
+
+- name: Configure required kernel modules for container runtime and networking
+  ansible.builtin.copy:
+    dest: /etc/modules-load.d/k8s.conf
+    content: |
+      overlay
+      br_netfilter
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Load kernel modules
+  community.general.modprobe:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ kernel_modules }}"
+  ignore_errors: true
+
+- name: Apply sysctl parameters for Kubernetes networking and performance
+  ansible.posix.sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value | string }}"
+    sysctl_set: yes
+    state: present
+    reload: yes
+    sysctl_file: /etc/sysctl.d/99-kubernetes-cri.conf
+  loop: "{{ sysctl_settings | dict2items }}"

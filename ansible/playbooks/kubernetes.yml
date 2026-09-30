@@ -1,0 +1,7 @@
+---
+# Playbook: Install Kubernetes components (kubeadm, kubelet, kubectl)
+- name: Install Kubernetes Node Components
+  hosts: k8s_cluster
+  become: yes
+  roles:
+    - kubernetes

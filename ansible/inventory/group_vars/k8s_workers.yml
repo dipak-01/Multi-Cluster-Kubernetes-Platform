@@ -1,0 +1,9 @@
+---
+# Worker Node Specific Configuration
+is_control_plane: false
+
+# Kubernetes Worker Node Ports to allow
+worker_firewall_ports:
+  - 10250  # Kubelet API
+  - 10256  # kube-proxy
+  - 30000:32767  # NodePort Services Range

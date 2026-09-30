@@ -1,0 +1,7 @@
+---
+# Playbook: Install and configure containerd container runtime
+- name: Configure Containerd Runtime
+  hosts: k8s_cluster
+  become: yes
+  roles:
+    - containerd
