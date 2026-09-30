@@ -6,9 +6,11 @@ A production-style Site Reliability Engineering (SRE) platform capable of runnin
 
 ## 🚀 Quick Navigation
 
+- [📖 Complete End-to-End Engineering Guide](docs/PLATFORM_GUIDE.md)
 - [Architecture Overview](ARCHITECTURE.md)
 - [Roadmap & Specifications](devops_project.md)
 - [Linux Troubleshooting Runbook](runbooks/linux-troubleshooting.md)
+- [Chaos Engineering Suite & Postmortems](chaos/CHAOS_EXPERIMENTS.md)
 - [Workload Helm Charts](helm/)
 - [GitOps ArgoCD Manifests](argocd/)
 - [Kubernetes Governance Manifests](kubernetes/)
