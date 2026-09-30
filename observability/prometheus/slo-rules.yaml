@@ -1,0 +1,202 @@
+# SLO recording rules and multi-window, multi-burn-rate alerts for api-production.
+# See docs/SLO.md for the reasoning behind every number in this file.
+#
+# Targets:   availability 99.5%  -> error budget 0.005
+#            latency      95% < 500ms -> slow budget 0.05
+#
+# Assumes ingress-nginx metrics with labels service="api-production", namespace="production".
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: api-production-slo-rules
+  namespace: observability
+  labels:
+    release: prometheus-stack
+    role: alert-rules
+spec:
+  groups:
+    # ---------------------------------------------------------------------------
+    # Availability SLI: ratio of 5xx responses over several windows
+    # ---------------------------------------------------------------------------
+    - name: slo-availability-recording
+      interval: 30s
+      rules:
+        - record: sli:api_error_ratio:rate5m
+          expr: |
+            sum(rate(nginx_ingress_controller_requests{service="api-production",namespace="production",status=~"5.."}[5m]))
+            /
+            sum(rate(nginx_ingress_controller_requests{service="api-production",namespace="production"}[5m]))
+        - record: sli:api_error_ratio:rate30m
+          expr: |
+            sum(rate(nginx_ingress_controller_requests{service="api-production",namespace="production",status=~"5.."}[30m]))
+            /
+            sum(rate(nginx_ingress_controller_requests{service="api-production",namespace="production"}[30m]))
+        - record: sli:api_error_ratio:rate1h
+          expr: |
+            sum(rate(nginx_ingress_controller_requests{service="api-production",namespace="production",status=~"5.."}[1h]))
+            /
+            sum(rate(nginx_ingress_controller_requests{service="api-production",namespace="production"}[1h]))
+        - record: sli:api_error_ratio:rate2h
+          expr: |
+            sum(rate(nginx_ingress_controller_requests{service="api-production",namespace="production",status=~"5.."}[2h]))
+            /
+            sum(rate(nginx_ingress_controller_requests{service="api-production",namespace="production"}[2h]))
+        - record: sli:api_error_ratio:rate6h
+          expr: |
+            sum(rate(nginx_ingress_controller_requests{service="api-production",namespace="production",status=~"5.."}[6h]))
+            /
+            sum(rate(nginx_ingress_controller_requests{service="api-production",namespace="production"}[6h]))
+        - record: sli:api_error_ratio:rate1d
+          expr: |
+            sum(rate(nginx_ingress_controller_requests{service="api-production",namespace="production",status=~"5.."}[1d]))
+            /
+            sum(rate(nginx_ingress_controller_requests{service="api-production",namespace="production"}[1d]))
+        - record: sli:api_error_ratio:rate3d
+          expr: |
+            sum(rate(nginx_ingress_controller_requests{service="api-production",namespace="production",status=~"5.."}[3d]))
+            /
+            sum(rate(nginx_ingress_controller_requests{service="api-production",namespace="production"}[3d]))
+        - record: sli:api_error_ratio:rate30d
+          expr: |
+            sum(rate(nginx_ingress_controller_requests{service="api-production",namespace="production",status=~"5.."}[30d]))
+            /
+            sum(rate(nginx_ingress_controller_requests{service="api-production",namespace="production"}[30d]))
+        # Fraction of the 30d error budget still available (1 = untouched, 0 = exhausted, <0 = overspent)
+        - record: slo:api_availability_budget_remaining:ratio
+          expr: 1 - (sli:api_error_ratio:rate30d / 0.005)
+
+    # ---------------------------------------------------------------------------
+    # Latency SLI: ratio of requests slower than 500ms
+    # ---------------------------------------------------------------------------
+    - name: slo-latency-recording
+      interval: 30s
+      rules:
+        - record: sli:api_slow_ratio:rate5m
+          expr: |
+            1 - (
+              sum(rate(nginx_ingress_controller_request_duration_seconds_bucket{service="api-production",namespace="production",le="0.5"}[5m]))
+              /
+              sum(rate(nginx_ingress_controller_request_duration_seconds_count{service="api-production",namespace="production"}[5m]))
+            )
+        - record: sli:api_slow_ratio:rate30m
+          expr: |
+            1 - (
+              sum(rate(nginx_ingress_controller_request_duration_seconds_bucket{service="api-production",namespace="production",le="0.5"}[30m]))
+              /
+              sum(rate(nginx_ingress_controller_request_duration_seconds_count{service="api-production",namespace="production"}[30m]))
+            )
+        - record: sli:api_slow_ratio:rate1h
+          expr: |
+            1 - (
+              sum(rate(nginx_ingress_controller_request_duration_seconds_bucket{service="api-production",namespace="production",le="0.5"}[1h]))
+              /
+              sum(rate(nginx_ingress_controller_request_duration_seconds_count{service="api-production",namespace="production"}[1h]))
+            )
+        - record: sli:api_slow_ratio:rate6h
+          expr: |
+            1 - (
+              sum(rate(nginx_ingress_controller_request_duration_seconds_bucket{service="api-production",namespace="production",le="0.5"}[6h]))
+              /
+              sum(rate(nginx_ingress_controller_request_duration_seconds_count{service="api-production",namespace="production"}[6h]))
+            )
+
+    # ---------------------------------------------------------------------------
+    # Alerts
+    # ---------------------------------------------------------------------------
+    - name: slo-availability-alerts
+      rules:
+        # Burn rate 14.4x: 2% of the 30d budget gone in 1h. Page.
+        - alert: APIAvailabilityBurnRateCritical
+          expr: |
+            sli:api_error_ratio:rate1h > (14.4 * 0.005)
+            and
+            sli:api_error_ratio:rate5m > (14.4 * 0.005)
+          for: 2m
+          labels:
+            severity: page
+            slo: availability
+          annotations:
+            summary: "api-production is burning its availability error budget 14.4x too fast"
+            description: "5xx ratio is {{ $value | humanizePercentage }} (1h window). At this rate the 30d budget is gone in about 2 days. See docs/SLO.md and runbooks/."
+
+        # Burn rate 6x: 5% of the budget gone in 6h. Page.
+        - alert: APIAvailabilityBurnRateHigh
+          expr: |
+            sli:api_error_ratio:rate6h > (6 * 0.005)
+            and
+            sli:api_error_ratio:rate30m > (6 * 0.005)
+          for: 5m
+          labels:
+            severity: page
+            slo: availability
+          annotations:
+            summary: "api-production is burning its availability error budget 6x too fast"
+            description: "5xx ratio is {{ $value | humanizePercentage }} (6h window). Budget gone in about 5 days at this rate."
+
+        # Burn rate 3x: 10% of the budget gone in 1d. Ticket.
+        - alert: APIAvailabilityBurnRateMedium
+          expr: |
+            sli:api_error_ratio:rate1d > (3 * 0.005)
+            and
+            sli:api_error_ratio:rate2h > (3 * 0.005)
+          for: 15m
+          labels:
+            severity: ticket
+            slo: availability
+          annotations:
+            summary: "api-production is burning its availability error budget 3x too fast"
+            description: "Sustained elevated 5xx ratio over 1 day. Investigate during working hours."
+
+        # Burn rate 1x: slow, steady leak. Ticket.
+        - alert: APIAvailabilityBurnRateLow
+          expr: |
+            sli:api_error_ratio:rate3d > (1 * 0.005)
+            and
+            sli:api_error_ratio:rate6h > (1 * 0.005)
+          for: 30m
+          labels:
+            severity: ticket
+            slo: availability
+          annotations:
+            summary: "api-production is steadily consuming its availability error budget"
+            description: "5xx ratio has exceeded the SLO for 3 days. Budget will be exhausted by the end of the window."
+
+        # If the metric vanishes, every ratio above becomes empty and alerts go silent.
+        - alert: APISLIMetricMissing
+          expr: absent(nginx_ingress_controller_requests{service="api-production",namespace="production"})
+          for: 10m
+          labels:
+            severity: ticket
+            slo: availability
+          annotations:
+            summary: "No request metrics for api-production"
+            description: "SLO alerts cannot evaluate. Check ingress-nginx metrics scraping and the service label."
+
+    - name: slo-latency-alerts
+      rules:
+        # Slow budget is 5%, so burn rate 14.4x means > 72% of requests are slow.
+        - alert: APILatencyBurnRateCritical
+          expr: |
+            sli:api_slow_ratio:rate1h > (14.4 * 0.05)
+            and
+            sli:api_slow_ratio:rate5m > (14.4 * 0.05)
+          for: 2m
+          labels:
+            severity: page
+            slo: latency
+          annotations:
+            summary: "api-production latency SLO is burning 14.4x too fast"
+            description: "{{ $value | humanizePercentage }} of requests exceeded 500ms over 1h."
+
+        - alert: APILatencyBurnRateHigh
+          expr: |
+            sli:api_slow_ratio:rate6h > (6 * 0.05)
+            and
+            sli:api_slow_ratio:rate30m > (6 * 0.05)
+          for: 5m
+          labels:
+            severity: ticket
+            slo: latency
+          annotations:
+            summary: "api-production latency SLO is burning 6x too fast"
+            description: "{{ $value | humanizePercentage }} of requests exceeded 500ms over 6h."

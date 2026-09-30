@@ -232,9 +232,7 @@ func handleClusterHealth() {
 	fmt.Printf("    Failed:   %s%d%s\n", ColorRed, failed, ColorReset)
 
 	// SLO Health
-	fmt.Printf("\n  %sSLO Status:%s\n", ColorBold, ColorReset)
-	fmt.Printf("    Availability: %s99.98%%%s (Target: 99.90%%)\n", ColorGreen, ColorReset)
-	fmt.Printf("    Error Budget: %s82%% remaining%s\n", ColorGreen, ColorReset)
+	printSLOSummary()
 
 	overall := "HEALTHY"
 	overallColor := ColorGreen
@@ -471,34 +469,6 @@ func handleIncidentDiagnose(appName string) {
 	fmt.Printf("%s=======================================================%s\n\n", ColorBold, ColorReset)
 }
 
-// -----------------------------------------------------------------------------
-// SLO Status Command
-// -----------------------------------------------------------------------------
-
-func handleSLOStatus() {
-	fmt.Printf("\n%s=======================================================%s\n", ColorBold, ColorReset)
-	fmt.Printf("%s  📊 Real-Time SRE SLO & Error Budget Tracking%s\n", ColorBold, ColorReset)
-	fmt.Printf("%s=======================================================%s\n\n", ColorBold, ColorReset)
-
-	fmt.Println("  SLO 1: Availability")
-	fmt.Printf("    Objective:            99.90%% monthly availability\n")
-	fmt.Printf("    Current SLI:          %s99.98%%%s\n", ColorGreen, ColorReset)
-	fmt.Printf("    Error Budget Total:   43.2 minutes / month\n")
-	fmt.Printf("    Error Budget Left:    %s82%% (35.4 minutes remaining)%s\n", ColorGreen, ColorReset)
-	fmt.Println("    Burn Rate:            0.18x (Within normal tolerance)")
-
-	fmt.Println("\n  SLO 2: Latency")
-	fmt.Printf("    Objective:            p95 < 300ms, p99 < 1s\n")
-	fmt.Printf("    Current p95 Latency:  %s28ms%s\n", ColorGreen, ColorReset)
-	fmt.Printf("    Current p99 Latency:  %s84ms%s\n", ColorGreen, ColorReset)
-
-	fmt.Println("\n  SLO 3: Error Rate")
-	fmt.Printf("    Objective:            HTTP 5xx < 1.0%%\n")
-	fmt.Printf("    Current 5xx Rate:     %s0.00%%%s\n", ColorGreen, ColorReset)
-
-	fmt.Printf("\n  %sDashboard:%s http://grafana.local (SRE Golden Signals)\n", ColorCyan, ColorReset)
-	fmt.Printf("%s=======================================================%s\n\n", ColorBold, ColorReset)
-}
 
 // -----------------------------------------------------------------------------
 // Helper Functions
