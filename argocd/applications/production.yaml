@@ -15,6 +15,15 @@ spec:
       valueFiles:
         - values.yaml
         - values-production.yaml
+      parameters:
+        - name: image.repository
+          value: platform-api
+        - name: image.tag
+          value: "1.0.0"
+        - name: image.pullPolicy
+          value: Never
+        - name: secretEnv.DATABASE_URL
+          value: "postgresql://postgres.nxrzxqpopwofcdxjsogn:aylljgUddaAlN6af@aws-0-ap-south-1.pooler.supabase.com:5432/postgres"
   destination:
     server: https://kubernetes.default.svc
     namespace: production
@@ -42,6 +51,13 @@ spec:
       valueFiles:
         - values.yaml
         - values-production.yaml
+      parameters:
+        - name: image.repository
+          value: platform-frontend
+        - name: image.tag
+          value: "1.0.0"
+        - name: image.pullPolicy
+          value: Never
   destination:
     server: https://kubernetes.default.svc
     namespace: production
