@@ -1,19 +1,21 @@
 # Production-Grade Multi-Cluster Kubernetes Platform
 
-A production-style Site Reliability Engineering (SRE) platform capable of running critical workloads across **AWS and On-Premise infrastructure**.
+A production-style Site Reliability Engineering (SRE) platform capable of running critical workloads across **AWS and On-Premise infrastructure**. Built with zero-trust networking, GitOps continuous delivery, end-to-end observability, real-time SLO error budget tracking, automated node provisioning, chaos engineering, and custom automation tooling.
 
 ---
 
 ## 🚀 Quick Navigation
 
 - [📖 Complete End-to-End Engineering Guide](docs/PLATFORM_GUIDE.md)
-- [Architecture Overview](ARCHITECTURE.md)
-- [Roadmap & Specifications](devops_project.md)
-- [Linux Troubleshooting Runbook](runbooks/linux-troubleshooting.md)
-- [Chaos Engineering Suite & Postmortems](chaos/CHAOS_EXPERIMENTS.md)
-- [Workload Helm Charts](helm/)
-- [GitOps ArgoCD Manifests](argocd/)
-- [Kubernetes Governance Manifests](kubernetes/)
+- [🎯 Service Level Objectives (SLOs) & Error Budgets](docs/SLO.md)
+- [🛠️ Ansible Node Automation & Hardening Guide](docs/ANSIBLE_GUIDE.md)
+- [🏛️ Architecture Overview](ARCHITECTURE.md)
+- [🔥 Chaos Engineering Suite & Postmortems](chaos/CHAOS_EXPERIMENTS.md)
+- [📋 Linux Troubleshooting Runbook](runbooks/linux-troubleshooting.md)
+- [📦 Workload Helm Charts](helm/)
+- [🔄 GitOps ArgoCD Manifests](argocd/)
+- [🛡️ Kubernetes Governance & Network Policies](kubernetes/)
+- [🤖 SRE Platform CLI (`platformctl`)](automation/go/)
 
 ---
 
@@ -21,46 +23,157 @@ A production-style Site Reliability Engineering (SRE) platform capable of runnin
 
 ```text
 ├── applications/               # Workload source code
-│   ├── api/                    # Node.js Express REST API backend
-│   └── frontend/               # React + Vite frontend
+│   ├── api/                    # Node.js Express REST API backend (PID 1, SIGTERM, /healthz)
+│   └── frontend/               # React 19 + Vite frontend (unprivileged NGINX port 8080)
+├── ansible/                    # Configuration management & OS hardening
+│   ├── inventory/              # Hosts & group variables
+│   ├── playbooks/              # site.yml, bootstrap, hardening, containerd, k8s, monitoring
+│   └── roles/                  # linux, hardening, containerd, kubernetes, node-exporter
 ├── terraform/                  # Infrastructure as Code (AWS VPC, EC2, IAM)
-├── ansible/                    # Configuration management & node hardening
-├── kubernetes/                 # Cluster manifests (Namespaces, NetworkPolicies, RBAC)
-├── helm/                       # Helm charts for workloads (api, frontend)
-├── argocd/                     # GitOps application manifests & projects
-├── observability/              # Prometheus, Grafana, Alertmanager, Loki
-├── automation/                 # platformctl SRE CLI tool
+├── kubernetes/                 # Cluster governance (Namespaces, NetworkPolicies, RBAC)
+├── helm/                       # Parameterized Helm charts (api, frontend)
+├── argocd/                     # GitOps application manifests & projects (self-healing)
+├── observability/              # Observability stack
+│   ├── prometheus/             # Prometheus stack values, ServiceMonitors, SLO rules
+│   ├── grafana/                # SRE Golden Signals & SLO Dashboard
+│   └── alertmanager/           # Multi-window burn-rate alerts & Slack integration
+├── chaos/                      # Automated failure injection & resilience test scripts
+├── automation/                 # SRE Automation CLI (platformctl in Go)
 ├── runbooks/                   # Incident management & troubleshooting procedures
-├── docs/                       # DR, Security, and Incident Response documentation
-├── .github/workflows/          # CI/CD pipelines
+├── docs/                       # Technical specifications, SLO math, and operations guides
+├── .github/workflows/          # CI/CD pipelines (Helm lint, Docker builds, GitOps sync)
 └── docker-compose.yaml         # Local development orchestration
 ```
 
 ---
 
-## 🛠️ Local Development
+## 🕹️ Platform Operations Runbook (How to Run Next Time)
 
-### Prerequisites
-- Docker & Docker Compose
-- Node.js 22+
-- Helm v3
-
-### Running via Docker Compose
+### 1. Start the Platform
+To boot up the Kubernetes cluster and networking:
 ```bash
-docker compose up -d --build
+# 1. Start Minikube cluster
+minikube start
+
+# 2. Ensure ingress and metrics addons are enabled
+minikube addons enable ingress
+minikube addons enable metrics-server
+
+# 3. Verify Minikube IP matches /etc/hosts (default: 192.168.49.2)
+minikube ip
 ```
-- Frontend: `http://localhost:5173`
-- Backend API: `http://localhost:3000`
-- Health check: `http://localhost:3000/healthz`
 
-### Linting & Testing Helm Charts
+*(Ensure `/etc/hosts` contains: `192.168.49.2 api.local frontend.local argocd.local grafana.local prometheus.local alertmanager.local`)*
+
+---
+
+### 2. Check System Health & SLOs (1-Second Check)
+Use the built-in Go CLI `platformctl` to instantly check cluster, resource saturation, and SLO status:
+
 ```bash
-helm lint helm/api
-helm lint helm/frontend
+# Check control plane, node readiness, CPU/RAM utilization, and pod states
+platformctl cluster health
 
-# Render production manifests
-helm template api helm/api -f helm/api/values-production.yaml
-helm template frontend helm/frontend -f helm/frontend/values-production.yaml
+# Check real-time 30-day availability, latency SLIs, and multi-window burn rates
+platformctl slo status
+```
+
+---
+
+### 3. Service Dashboard Directory
+
+All platform components are accessible via Ingress:
+
+| Service | URL | Credentials | Purpose |
+|---|---|---|---|
+| **Frontend Application** | [http://frontend.local](http://frontend.local) | — | Production React UI connecting to `/api` |
+| **Backend API** | [http://api.local/healthz](http://api.local/healthz) | — | Node.js Express REST API |
+| **ArgoCD (GitOps)** | [http://argocd.local](http://argocd.local) | `admin` / `oKaYh2mjLyEOwqfn` | Continuous delivery & cluster reconciliation |
+| **Grafana** | [http://grafana.local](http://grafana.local) | `admin` / `prom-operator` | SRE Golden Signals & SLO Dashboard |
+| **Prometheus Rules** | [http://prometheus.local/rules](http://prometheus.local/rules) | — | Recording rules & burn-rate alerts |
+| **Alertmanager** | [http://alertmanager.local](http://alertmanager.local) | — | Incident routing & notification engine |
+
+---
+
+### 4. Common Daily Workflows
+
+#### A. GitOps Application State (ArgoCD)
+ArgoCD continuously syncs from the `helm/` directory:
+```bash
+# Check application sync & health state
+kubectl get applications -n argocd
+
+# Inspect production pods (3 API replicas + 3 Frontend replicas)
+kubectl get pods -n production
+```
+
+#### B. Running Chaos & Resilience Tests
+Run automated failure injections to test platform fault-tolerance:
+```bash
+# Test pod kill resilience under continuous load (100% success rate, 0 dropped requests)
+./chaos/pod-failure/test-pod-resilience.sh
+
+# Test automated OOMKill recovery (137 exit code handling)
+./chaos/resource-exhaustion/simulate-memory-leak.sh
+
+# Test bad release deployment rejection
+./chaos/bad-deployment/test-bad-release.sh
+```
+
+#### C. Ansible Node Automation (Milestone 3)
+Automated Linux baseline, OS hardening, containerd CRI, and monitoring agent deployment:
+```bash
+# Syntax-check all roles and playbooks
+ansible-playbook -i ansible/inventory/hosts.ini ansible/playbooks/site.yml --syntax-check
+
+# Ping local host driver
+ansible -i "localhost," -c local all -m ping -e ansible_become=false
+
+# Execute dry-run check across cluster inventory
+ansible-playbook -i ansible/inventory/hosts.ini ansible/playbooks/site.yml --check
+```
+
+#### D. Standalone Docker Compose (Fallback Mode)
+If running workloads outside Kubernetes:
+```bash
+docker compose up -d
+docker compose down
+```
+
+---
+
+### 5. Shutting Down Cleanly
+When you finish your work or demo:
+```bash
+minikube stop
+```
+*(All configurations, pods, dashboards, and metrics remain safely persisted for your next session).*
+
+---
+
+## 🛠️ SRE CLI Reference (`platformctl`)
+
+The custom SRE command-line utility built in Go ([`automation/go/`](automation/go/)):
+
+```bash
+# Cluster health & resource metrics
+platformctl cluster health
+platformctl cluster nodes
+
+# Application management
+platformctl application status api-production
+platformctl application logs api-production 100
+platformctl application restart api-production
+
+# Incident diagnosis (scans pods, crash loops, OOMKills, events)
+platformctl incident diagnose production
+
+# SLO & error budget tracking
+platformctl slo status
+
+# GitOps deployment history & rollbacks
+platformctl deployment history api-production
+platformctl deployment rollback api-production 1
 ```
 
 ---
