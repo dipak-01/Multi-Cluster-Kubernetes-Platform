@@ -16,4 +16,5 @@ jobs:
       run: |
         cd ~/software/multistage_kubernetes_platform || cd ~/software/Multi-Cluster-Kubernetes-Platform
         git pull origin main
-        docker compose up -d --build
+        docker compose down --remove-orphans || true
+        docker compose up -d --build --force-recreate
