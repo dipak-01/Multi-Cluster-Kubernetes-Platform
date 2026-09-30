@@ -51,7 +51,7 @@ ingress:
           servicePort: 80
         - path: /api
           pathType: Prefix
-          serviceName: api
+          serviceName: api-production
           servicePort: 3000
   tls: []
 
