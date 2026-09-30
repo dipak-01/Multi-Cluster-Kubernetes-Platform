@@ -8,11 +8,14 @@ ARG VITE_BACKEND_URL=""
 ENV VITE_BACKEND_URL=${VITE_BACKEND_URL}
 RUN npm run build
 
-# Stage 2: Production web server (Nginx)
+# Stage 2: Production web server (Nginx non-root)
 FROM nginx:alpine-slim AS production
 COPY --from=builder /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
+COPY nginx.conf /etc/nginx/nginx.conf
+RUN chown -R nginx:nginx /usr/share/nginx/html && \
+    chmod -R 755 /usr/share/nginx/html
+USER nginx
+EXPOSE 8080
 CMD ["nginx", "-g", "daemon off;"]
 
 # Stage 3: Local development with hot reload
