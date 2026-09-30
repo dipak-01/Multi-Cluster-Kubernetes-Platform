@@ -1,6 +1,6 @@
-# Complete Production-Grade Kubernetes Platform Engineering Guide
+# Resilix — Platform Engineering & SRE Operations Guide
 
-A comprehensive architectural, operational, and engineering manual for the **Multi-Cluster Kubernetes SRE Platform**.
+A comprehensive architectural, operational, and engineering manual for **Resilix**, a hands-on Kubernetes SRE workbench.
 
 ---
 

@@ -4,7 +4,7 @@ metadata:
   name: platform
   namespace: argocd
 spec:
-  description: Multi-Cluster Platform Core Workloads
+  description: Resilix Core Workloads
   sourceRepos:
     - "*"
   destinations:

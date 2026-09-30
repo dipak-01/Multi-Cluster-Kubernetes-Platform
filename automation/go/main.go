@@ -128,7 +128,7 @@ func main() {
 }
 
 func printUsage() {
-	fmt.Printf("%s%splatformctl — Operational CLI for Multi-Cluster Kubernetes Platform%s\n\n", ColorBold, ColorCyan, ColorReset)
+	fmt.Printf("%s%splatformctl — Operational CLI for Resilix (SRE & Platform Toolkit)%s\n\n", ColorBold, ColorCyan, ColorReset)
 	fmt.Printf("%sUSAGE:%s\n", ColorBold, ColorReset)
 	fmt.Printf("  platformctl <command> [subcommand] [arguments]\n\n")
 	fmt.Printf("%sCORE COMMANDS:%s\n", ColorBold, ColorReset)

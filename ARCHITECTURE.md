@@ -1,8 +1,8 @@
-# Platform Architecture & Design
+# Resilix — Architecture & Design Blueprint
 
 ## 1. System Overview
 
-This repository implements a production-grade, multi-cluster Site Reliability Engineering (SRE) platform supporting hybrid cloud (AWS) and on-premise infrastructure.
+**Resilix** is a hands-on Site Reliability Engineering (SRE) and cloud platform workbench built to demonstrate fault tolerance, real-time SLO error budget tracking, automated Linux node hardening, GitOps delivery, chaos engineering, and custom automation tooling.
 
 ```
                          ENGINEERS

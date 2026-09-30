@@ -1,6 +1,6 @@
-# Production-Grade Multi-Cluster Kubernetes Platform
+# Resilix
 
-A production-style Site Reliability Engineering (SRE) platform capable of running critical workloads across **AWS and On-Premise infrastructure**. Built with zero-trust networking, GitOps continuous delivery, end-to-end observability, real-time SLO error budget tracking, automated node provisioning, chaos engineering, and custom automation tooling.
+> **Resilix** is a hands-on Site Reliability Engineering (SRE) and cloud platform workbench built for resilience, real-time SLO error budget tracking, automated Linux node hardening, GitOps delivery, chaos engineering, and custom automation tooling.
 
 ---
 
