@@ -30,9 +30,10 @@ kubectl get pods -n "${NAMESPACE}" -l app.kubernetes.io/name=api
 echo -e "\n--- Checking ArgoCD Application Status ---"
 kubectl get application "${APP_NAME}" -n argocd -o jsonpath='{"Sync: "}{.status.sync.status}{"\nHealth: "}{.status.health.status}{"\n"}'
 
-echo -e "\n[4/4] ArgoCD Self-Healing in action..."
-echo "Because 'selfHeal: true' is configured, ArgoCD actively detects the manual drift and restores the Git desired state!"
-sleep 5
+echo -e "\n[4/4] Restoring healthy deployment state..."
+kubectl patch deployment "${APP_NAME}" -n "${NAMESPACE}" --type='json' \
+  -p='[{"op": "remove", "path": "/spec/template/spec/containers/0/command"}]' 2>/dev/null || true
+sleep 3
 echo "--- Post-Reconciliation Pod Status ---"
 kubectl get pods -n "${NAMESPACE}" -l app.kubernetes.io/name=api
 
